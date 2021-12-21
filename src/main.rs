@@ -6,7 +6,10 @@ fn main() {
     // const IMAGE_WIDTH: i32 = 256;
     // const IMAGE_HEIGHT: i32 = 256;
     // image_output(IMAGE_HEIGHT, IMAGE_WIDTH);
+    test_vec3();
+}
 
+fn test_vec3() {
     // Testing vec3.rs
     let vec1 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
     let vec2 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
@@ -16,6 +19,22 @@ fn main() {
     assert_eq!(result.z(), 6.0);
     assert_eq!(vec1.x() + vec2.x(),result.x());
     assert_eq!(vec1.length(), (14 as f32).sqrt());
+    let vec3: Vec3 = Vec3::new(7f32, 14f32, 21f32);
+    assert_same_vector(&vec3, &(7.0 * vec1));
+    assert_same_vector(&(7.0 / vec3), &vec1);
+
+    let vec1 : Vec3 = Vec3::new(3f32, 7f32, 31f32);
+    let vec2 : Vec3 = Vec3::new(36f32, 64f32, 8f32);
+    let cross_vec : Vec3 = Vec3::new(-1928f32, 1092f32, -60f32);
+    assert_same_vector(&cross_vec, &Vec3::cross(vec1, vec2));
+
+    assert_eq!(804 as f32, Vec3::dot(vec1, vec2));
+}
+
+fn assert_same_vector(v1: &Vec3, v2: &Vec3) {
+    assert_eq!(v1.x(), v2.x());
+    assert_eq!(v1.y(), v2.y());
+    assert_eq!(v1.z(), v2.z());
 }
 
 fn image_output(image_width: i32, image_height: i32) {

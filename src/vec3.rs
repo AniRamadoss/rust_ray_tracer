@@ -29,10 +29,26 @@ impl Vec3 {
         return length;
     }
 
+    #[inline]
+    pub fn dot(self, other: Vec3) -> f32 {
+        return self.e[0] * other.e[0] + self.e[1] * other.e[1] + self.e[2] * other.e[2];
+    }
+
+    #[inline]
+    pub fn cross(self, other: Vec3) -> Vec3 {
+        return Vec3 {
+            e: [
+                self.e[1] * other.e[2] - self.e[2] * other.e[1],
+                self.e[2] * other.e[0] - self.e[0] * other.e[2],
+                self.e[0] * other.e[1] - self.e[1] * other.e[0],
+            ]
+        }
+    }
 }
 
 impl ops::Add for Vec3 {
     type Output = Vec3;
+    #[inline]
     fn add(self, _other: Vec3) -> Self::Output {
         return Vec3 {
             e: [self.e[0] + _other.e[0],
@@ -45,6 +61,7 @@ impl ops::Add for Vec3 {
 
 impl ops::Mul for Vec3 {
     type Output = Self;
+    #[inline]
     fn mul(self, _other: Vec3) -> Vec3 {
         return Vec3 {
             e: [self.e[0] * _other.e[0],
@@ -57,6 +74,7 @@ impl ops::Mul for Vec3 {
 
 impl ops::Div for Vec3 {
     type Output = Self;
+    #[inline]
     fn div(self, _other: Vec3) -> Vec3 {
         return Vec3 {
             e: [self.e[0] / _other.e[0],
@@ -66,3 +84,29 @@ impl ops::Div for Vec3 {
         }
     }
 }
+
+// scalar * vector
+impl std::ops::Mul<Vec3> for f32 {
+    type Output = Vec3;
+
+    #[inline]
+    fn mul(self, mut _other: Vec3) -> Self::Output {
+        _other.e[0] = _other.e[0] * self;
+        _other.e[1] = _other.e[1] * self;
+        _other.e[2] = _other.e[2] * self;
+        return _other;
+    }
+}
+
+impl std::ops::Div<Vec3> for f32 {
+    type Output = Vec3;
+
+    #[inline]
+    fn div(self, mut _other: Vec3) -> Self::Output {
+        _other.e[0] = _other.e[0] / self;
+        _other.e[1] = _other.e[1] / self;
+        _other.e[2] = _other.e[2] / self;
+        return _other;
+    }
+}
+
