@@ -1,12 +1,54 @@
 mod vec3;
+mod ray;
+
 use vec3::Vec3;
+use vec3::Color;
+use vec3::Point3;
+use ray::Ray;
+
+fn ray_color(r: Ray) -> Color {
+    let unit_direction: Vec3 = Vec3::unit_vector(r.direction() as Vec3);
+    let t = 0.5 * (unit_direction.y() + 1.0);
+    return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+}
 
 fn main() {
-    // // Image dimensions
-    // const IMAGE_WIDTH: i32 = 256;
-    // const IMAGE_HEIGHT: i32 = 256;
+    // Image
+    const IMAGE_WIDTH: i32 = 400;
+    const ASPECT_RATIO: f32 = 16.0/9.0;
+    const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as i32;
+
+    // Camera
+    let viewport_height = 2.0;
+    let viewport_width = ASPECT_RATIO * viewport_height;
+    let focal_length = 1.0;
+
+    let origin = Point3::new(0.0, 0.0, 0.0);
+    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
+    let vertical = Vec3::new(0.0, viewport_height, 0.0);
+    let lower_left_corner = origin - (horizontal / 2.0) - (vertical/2.0) - Vec3::new(0.0, 0.0, focal_length);
+
+
+    // Render
+    print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
+    for j in (0..IMAGE_HEIGHT).rev() {
+        if j % 10 == 0 {
+            eprintln!("\nScanlines remaining: {} ", j);
+        }
+        for i in 0..IMAGE_WIDTH {
+            let u = (i as f32) / (IMAGE_WIDTH - 1) as f32;
+            let v = (j as f32) / (IMAGE_HEIGHT - 1) as f32;
+
+            let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+            let pixel_color = ray_color(r);
+            write_color(&pixel_color);
+        }
+    }
+    eprintln!("\nCompleted!\n");
+
+
     // image_output(IMAGE_HEIGHT, IMAGE_WIDTH);
-    test_vec3();
+    // test_vec3();
 }
 
 fn test_vec3() {
@@ -21,7 +63,7 @@ fn test_vec3() {
     assert_eq!(vec1.length(), (14 as f32).sqrt());
     let vec3: Vec3 = Vec3::new(7f32, 14f32, 21f32);
     assert_same_vector(&vec3, &(7.0 * vec1));
-    assert_same_vector(&(7.0 / vec3), &vec1);
+    assert_same_vector(&(vec3 / 7.0), &vec1);
 
     let vec1 : Vec3 = Vec3::new(3f32, 7f32, 31f32);
     let vec2 : Vec3 = Vec3::new(36f32, 64f32, 8f32);
@@ -37,21 +79,23 @@ fn assert_same_vector(v1: &Vec3, v2: &Vec3) {
     assert_eq!(v1.z(), v2.z());
 }
 
-fn image_output(image_width: i32, image_height: i32) {
+fn image_output(IMAGE_WIDTH: i32, IMAGE_HEIGHT: i32) {
     // Render
-    print!("P3\n{} {}\n255\n", image_width, image_height);
-    for i in (0..image_height).rev() {
+    print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
+    for i in (0..IMAGE_HEIGHT).rev() {
         eprintln!("\nScanlines remaining: {} ", i);
-        for j in 0..image_width {
-            let r = (j - 1) as f32 / (image_width - 1) as f32;
-            let g = (i - 1) as f32 / (image_height - 1) as f32;
+        for j in 0..IMAGE_WIDTH {
+            let r = (j - 1) as f32 / (IMAGE_WIDTH - 1) as f32;
+            let g = (i - 1) as f32 / (IMAGE_HEIGHT - 1) as f32;
             let b = 0.25;
 
-            let r_value = (255.999 * r) as i32;
-            let g_value = (255.999 * g) as i32;
-            let b_value = (255.999 * b) as i32;
-            print!("{} {} {}\n", r_value, g_value, b_value);
+            let v: Vec3 = Vec3::new(r, g, b);
+            write_color(&v);
         }
     }
     eprintln!("\nCompleted!\n");
+}
+
+pub fn write_color(v: &Color) {
+    println!("{} {} {}", (255.999 * v.x()) as i32, (255.999 * v.y()) as i32, (255.999 * v.z()) as i32);
 }

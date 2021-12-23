@@ -44,6 +44,11 @@ impl Vec3 {
             ]
         }
     }
+
+    #[inline]
+    pub fn unit_vector(v: Vec3) -> Vec3 {
+        return v / v.length();
+    }
 }
 
 impl ops::Add for Vec3 {
@@ -54,6 +59,19 @@ impl ops::Add for Vec3 {
             e: [self.e[0] + _other.e[0],
                 self.e[1] + _other.e[1],
                 self.e[2] + _other.e[2],
+            ]
+        }
+    }
+}
+
+impl ops::Sub for Vec3 {
+    type Output = Vec3;
+    #[inline]
+    fn sub(self, _other: Vec3) -> Self::Output {
+        return Vec3 {
+            e: [self.e[0] - _other.e[0],
+                self.e[1] - _other.e[1],
+                self.e[2] - _other.e[2],
             ]
         }
     }
@@ -85,6 +103,20 @@ impl ops::Div for Vec3 {
     }
 }
 
+// vector / scalar
+impl ops::Div<f32> for Vec3 {
+    type Output = Self;
+    fn div(self, _other: f32) -> Self::Output {
+        return Vec3 {
+            e: [self.e[0] / _other,
+                self.e[1] / _other,
+                self.e[2] / _other,
+            ]
+        }
+    }
+}
+
+
 // scalar * vector
 impl std::ops::Mul<Vec3> for f32 {
     type Output = Vec3;
@@ -98,15 +130,17 @@ impl std::ops::Mul<Vec3> for f32 {
     }
 }
 
-impl std::ops::Div<Vec3> for f32 {
-    type Output = Vec3;
+// impl std::ops::Div<Vec3> for f32 {
+//     type Output = Vec3;
+//
+//     #[inline]
+//     fn div(self, mut _other: Vec3) -> Self::Output {
+//         _other.e[0] = _other.e[0] / self;
+//         _other.e[1] = _other.e[1] / self;
+//         _other.e[2] = _other.e[2] / self;
+//         return _other;
+//     }
+// }
 
-    #[inline]
-    fn div(self, mut _other: Vec3) -> Self::Output {
-        _other.e[0] = _other.e[0] / self;
-        _other.e[1] = _other.e[1] / self;
-        _other.e[2] = _other.e[2] / self;
-        return _other;
-    }
-}
-
+pub type Point3 = Vec3;
+pub type Color = Vec3;
