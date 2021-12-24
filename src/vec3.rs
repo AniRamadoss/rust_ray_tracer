@@ -29,6 +29,10 @@ impl Vec3 {
         return length;
     }
 
+    pub fn length_squared(&self) -> f32 {
+        return self.length() * self.length();
+    }
+
     #[inline]
     pub fn dot(self, other: Vec3) -> f32 {
         return self.e[0] * other.e[0] + self.e[1] * other.e[1] + self.e[2] * other.e[2];
