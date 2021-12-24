@@ -46,22 +46,28 @@ fn main() {
 }
 
 fn ray_color(r: Ray) -> Color {
-    if hit_sphere(&(Point3::new(0.0, 0.0, -1.0)), 0.5, &r) {
-        return Color::new(1.0, 0.0, 0.0);
+    let mut t = hit_sphere(&(Point3::new(0.0, 0.0, -1.0)), 0.5, &r);
+    if t > 0.0 {
+        let N: Vec3 = Vec3::unit_vector(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
+        return 0.5 * Color::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0);
     }
     let unit_direction: Vec3 = Vec3::unit_vector(r.direction() as Vec3);
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    t = 0.5 * (unit_direction.y() + 1.0);
     return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
 }
 
-pub fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> bool {
+pub fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> f32 {
     let oc: Vec3 = (*r).origin() - *center;
     let a = Vec3::dot(r.direction(), (*r).direction());
     let b = 2.0 * Vec3::dot(oc, (*r).direction());
     let c = Vec3::dot(oc, oc) - radius * radius;
 
     let discriminant = b * b - 4.0 * a * c;
-    return discriminant > 0.0;
+    return if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-b - (discriminant).sqrt()) / (2.0 * a)
+    }
 }
 
 fn test_vec3() {
