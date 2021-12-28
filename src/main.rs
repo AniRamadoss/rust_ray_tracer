@@ -1,6 +1,7 @@
 mod vec3;
 mod ray;
 mod hittable;
+mod hittable_list;
 
 use vec3::Vec3;
 use vec3::Color;
