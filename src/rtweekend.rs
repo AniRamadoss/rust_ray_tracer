@@ -13,3 +13,14 @@ pub fn radians_to_degrees(radians: f64) -> f64 {
     return radians * ((180.0 as f64) / pi);
 }
 
+#[inline]
+pub fn random_double() -> f32 {
+    let mut rng = rand::thread_rng();
+    return rng.gen_range(0.0..1.0)
+}
+
+#[inline]
+pub fn random_double_range(min: f32, max: f32) -> f32 {
+    let mut rng = rand::thread_rng();
+    return rng.gen_range(min..max);
+}

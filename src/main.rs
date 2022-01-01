@@ -12,6 +12,7 @@ use vec3::Point3;
 use ray::Ray;
 use crate::hittable::{HitRecord, Hittable};
 use std::rc::Rc;
+use hittable_list::HittableList;
 
 fn main() {
     // Image
@@ -20,10 +21,11 @@ fn main() {
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as i32;
 
     // World
-    let world_objects: Vec<Rc<Sphere>> = Vec::new();
-    let world = hittable_list::new(world_objects);
-    world.add(Rc::new(Point3::new(0.0, 0.0, -1.0)), 0.5);
-    world.add(Rc::new(Point3::new(0.0, -100.5, -1.0)), 100);
+    let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
+    let mut world = HittableList::new(world_objects);
+
+    world.add(Box::new(Sphere::new((Point3::new(0.0, 0.0, -1.0)), 0.5)));
+    world.add(Box::new(Sphere::new((Point3::new(0.0, -100.5, -1.0)), 100.0)));
 
 
     // Camera
@@ -48,7 +50,7 @@ fn main() {
             let v = (j as f32) / (IMAGE_HEIGHT - 1) as f32;
 
             let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical - origin);
-            let pixel_color = ray_color(r, world);
+            let pixel_color = ray_color(r, &world);
             write_color(&pixel_color);
         }
     }
@@ -59,7 +61,7 @@ fn main() {
     // test_vec3();
 }
 
-fn ray_color(r: Ray, world: &dyn Hittable<HitRecord>) -> Color {
+fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
     let mut rec = HitRecord::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
     if world.hit(&r, 0.0, rtweekend::infinity as f32, &mut rec) {
         return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));

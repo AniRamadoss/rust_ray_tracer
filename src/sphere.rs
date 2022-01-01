@@ -9,7 +9,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(&self, cen: Point3, r: f32) -> Sphere {
+    pub fn new(cen: Point3, r: f32) -> Sphere {
         return Sphere {
             center: cen,
             radius: r,
@@ -17,7 +17,7 @@ impl Sphere {
     }
 }
 
-impl Hittable<HitRecord> for Sphere {
+impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let oc: Vec3 = ray.origin() - self.center;
         let a = ray.direction().length_squared();
