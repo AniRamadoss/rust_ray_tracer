@@ -40,17 +40,17 @@ fn main() {
         if j % 10 == 0 {
             eprintln!("\nScanlines remaining: {} ", j);
         }
-        let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
-        for i in 0..samples_per_pixel {
-            let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
-            let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
-
-            let r = cam.get_ray(u, v);
-
-
-            pixel_color = pixel_color + ray_color(r, &world);
+        for i in 0..IMAGE_WIDTH {
+            let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
+            for s in 0..samples_per_pixel {
+                let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
+                let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
+                let r = cam.get_ray(u, v);
+                pixel_color = pixel_color + ray_color(r, &world);
+            }
             write_color(pixel_color, samples_per_pixel);
         }
+
     }
     eprintln!("\nCompleted!\n");
 
