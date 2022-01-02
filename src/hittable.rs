@@ -3,7 +3,7 @@ use crate::Vec3;
 use crate::vec3::Point3;
 
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,

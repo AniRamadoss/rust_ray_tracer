@@ -4,6 +4,7 @@ mod hittable;
 mod rtweekend;
 mod sphere;
 mod hittable_list;
+mod camera;
 
 use sphere::Sphere;
 use vec3::Vec3;
@@ -13,12 +14,14 @@ use ray::Ray;
 use crate::hittable::{HitRecord, Hittable};
 use std::rc::Rc;
 use hittable_list::HittableList;
+use camera::Camera;
 
 fn main() {
     // Image
     const IMAGE_WIDTH: i32 = 400;
     const ASPECT_RATIO: f32 = 16.0/9.0;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as i32;
+    const samples_per_pixel: i32 = 100;
 
     // World
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
@@ -29,15 +32,7 @@ fn main() {
 
 
     // Camera
-    let viewport_height = 2.0;
-    let viewport_width = ASPECT_RATIO * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Point3::new(0.0, 0.0, 0.0);
-    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner = origin - (horizontal / 2.0) - (vertical/2.0) - Vec3::new(0.0, 0.0, focal_length);
-
+    let cam: Camera = Camera::new();
 
     // Render
     print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
@@ -45,13 +40,16 @@ fn main() {
         if j % 10 == 0 {
             eprintln!("\nScanlines remaining: {} ", j);
         }
-        for i in 0..IMAGE_WIDTH {
-            let u = (i as f32) / (IMAGE_WIDTH - 1) as f32;
-            let v = (j as f32) / (IMAGE_HEIGHT - 1) as f32;
+        let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
+        for i in 0..samples_per_pixel {
+            let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
+            let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
 
-            let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical - origin);
-            let pixel_color = ray_color(r, &world);
-            write_color(&pixel_color);
+            let r = cam.get_ray(u, v);
+
+
+            pixel_color = pixel_color + ray_color(r, &world);
+            write_color(pixel_color, samples_per_pixel);
         }
     }
     eprintln!("\nCompleted!\n");
@@ -61,9 +59,9 @@ fn main() {
     // test_vec3();
 }
 
-fn ray_color(r: Ray, world: &dyn Hittable) -> Color {
+fn ray_color(r: Ray, world: &HittableList) -> Color {
     let mut rec = HitRecord::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
-    if world.hit(&r, 0.0, rtweekend::infinity as f32, &mut rec) {
+    if (*world).hit(&r, 0.0, rtweekend::infinity as f32, &mut rec) {
         return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
@@ -84,6 +82,15 @@ pub fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> f32 {
     } else {
         (-half_b - (discriminant).sqrt()) / (a)
     }
+}
+
+pub fn write_color(v: Color, samples_per_pixel: i32) {
+    let scale = 1.0 / (samples_per_pixel as f32);
+    let r: f32 = v.x() * scale;
+    let g: f32 = v.y() * scale;
+    let b: f32 = v.z() * scale;
+
+    println!("{} {} {}", (256.0 * rtweekend::clamp(r, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(g, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(b, 0.0, 0.999)) as i32);
 }
 
 fn test_vec3() {
@@ -114,23 +121,21 @@ fn assert_same_vector(v1: &Vec3, v2: &Vec3) {
     assert_eq!(v1.z(), v2.z());
 }
 
-fn image_output(IMAGE_WIDTH: i32, IMAGE_HEIGHT: i32) {
-    // Render
-    print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
-    for i in (0..IMAGE_HEIGHT).rev() {
-        eprintln!("\nScanlines remaining: {} ", i);
-        for j in 0..IMAGE_WIDTH {
-            let r = (j - 1) as f32 / (IMAGE_WIDTH - 1) as f32;
-            let g = (i - 1) as f32 / (IMAGE_HEIGHT - 1) as f32;
-            let b = 0.25;
+// fn image_output(IMAGE_WIDTH: i32, IMAGE_HEIGHT: i32) {
+//     // Render
+//     print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
+//     for i in (0..IMAGE_HEIGHT).rev() {
+//         eprintln!("\nScanlines remaining: {} ", i);
+//         for j in 0..IMAGE_WIDTH {
+//             let r = (j - 1) as f32 / (IMAGE_WIDTH - 1) as f32;
+//             let g = (i - 1) as f32 / (IMAGE_HEIGHT - 1) as f32;
+//             let b = 0.25;
+//
+//             let v: Vec3 = Vec3::new(r, g, b);
+//             write_color(&v);
+//         }
+//     }
+//     eprintln!("\nCompleted!\n");
+// }
 
-            let v: Vec3 = Vec3::new(r, g, b);
-            write_color(&v);
-        }
-    }
-    eprintln!("\nCompleted!\n");
-}
 
-pub fn write_color(v: &Color) {
-    println!("{} {} {}", (255.999 * v.x()) as i32, (255.999 * v.y()) as i32, (255.999 * v.z()) as i32);
-}

@@ -1,3 +1,5 @@
+use rand;
+use rand::Rng;
 
 // Constants
 pub static infinity: f64 = f64::INFINITY;
@@ -16,11 +18,22 @@ pub fn radians_to_degrees(radians: f64) -> f64 {
 #[inline]
 pub fn random_double() -> f32 {
     let mut rng = rand::thread_rng();
-    return rng.gen_range(0.0..1.0)
+    return rng.gen_range(0.0..1.0) as f32;
 }
 
 #[inline]
 pub fn random_double_range(min: f32, max: f32) -> f32 {
     let mut rng = rand::thread_rng();
-    return rng.gen_range(min..max);
+    return rng.gen_range(min..max) as f32;
+}
+
+#[inline]
+pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
+    if x < min {
+        return min;
+    }
+    else if x > max {
+        return max;
+    }
+    return x;
 }

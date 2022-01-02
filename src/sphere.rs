@@ -2,7 +2,7 @@ use crate::ray::Ray;
 use crate::Vec3;
 use crate::vec3::Point3;
 use crate::hittable::{Hittable, HitRecord};
-
+#[derive(Copy, Clone)]
 pub struct Sphere {
     center: Point3,
     radius: f32,
