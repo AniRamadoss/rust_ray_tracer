@@ -1,4 +1,5 @@
 use std::ops;
+use crate::rtweekend;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -52,6 +53,38 @@ impl Vec3 {
     #[inline]
     pub fn unit_vector(v: Vec3) -> Vec3 {
         return v / v.length();
+    }
+
+    #[inline]
+    pub fn random() -> Vec3 {
+        return Vec3 {
+            e: [rtweekend::random_double(),
+            rtweekend::random_double(),
+            rtweekend::random_double()]
+        }
+    }
+
+    #[inline]
+    pub fn random_range(min: f32, max: f32) -> Vec3 {
+        return Vec3 {
+            e: [rtweekend::random_double_range(min, max),
+                rtweekend::random_double_range(min, max),
+                rtweekend::random_double_range(min, max)]
+        }
+    }
+
+    #[inline]
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        return Vec3::unit_vector(Vec3::random_in_unit_sphere());
     }
 }
 

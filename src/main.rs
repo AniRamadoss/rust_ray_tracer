@@ -22,6 +22,7 @@ fn main() {
     const ASPECT_RATIO: f32 = 16.0/9.0;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as i32;
     const samples_per_pixel: i32 = 100;
+    const max_depth: i32 = 50;
 
     // World
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
@@ -46,7 +47,7 @@ fn main() {
                 let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
                 let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
                 let r = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(r, &world);
+                pixel_color = pixel_color + ray_color(r, &world, max_depth);
             }
             write_color(pixel_color, samples_per_pixel);
         }
@@ -59,10 +60,14 @@ fn main() {
     // test_vec3();
 }
 
-fn ray_color(r: Ray, world: &HittableList) -> Color {
+fn ray_color(r: Ray, world: &HittableList, depth: i32) -> Color {
     let mut rec = HitRecord::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
-    if (*world).hit(&r, 0.0, rtweekend::infinity as f32, &mut rec) {
-        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+    if depth <= 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+    if (*world).hit(&r, 0.001, rtweekend::infinity as f32, &mut rec) {
+        let target: Point3 = rec.p + rec.normal + Vec3::random_unit_vector();
+        return 0.5 * ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1);
     }
 
     let unit_direction: Vec3 = Vec3::unit_vector(r.direction() as Vec3);
@@ -86,9 +91,9 @@ pub fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> f32 {
 
 pub fn write_color(v: Color, samples_per_pixel: i32) {
     let scale = 1.0 / (samples_per_pixel as f32);
-    let r: f32 = v.x() * scale;
-    let g: f32 = v.y() * scale;
-    let b: f32 = v.z() * scale;
+    let r: f32 = (v.x() * scale).sqrt();
+    let g: f32 = (v.y() * scale).sqrt();
+    let b: f32 = (v.z() * scale).sqrt();
 
     println!("{} {} {}", (256.0 * rtweekend::clamp(r, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(g, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(b, 0.0, 0.999)) as i32);
 }
