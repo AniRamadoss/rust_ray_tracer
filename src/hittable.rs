@@ -1,21 +1,25 @@
 use crate::ray::Ray;
-use crate::Vec3;
+use crate::{Metal, Vec3};
 use crate::vec3::Point3;
+use crate::material::Material;
+use crate::vec3::Color;
 
-
-#[derive(Copy, Clone)]
+// #[derive(Copy, Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub mat_ptr: Box<dyn Material>,
     pub t: f32,
     pub front_face: bool,
 }
 
 impl HitRecord {
     pub fn new(p: Point3, normal: Vec3, t: f32, front_face: bool) -> HitRecord {
+        let color = Box::new(Metal::new(&Color::new(0.0, 0.0, 0.0)));
         return HitRecord {
             p,
             normal,
+            mat_ptr: color,
             t,
             front_face,
         }

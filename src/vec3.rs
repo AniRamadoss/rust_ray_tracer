@@ -86,6 +86,15 @@ impl Vec3 {
     pub fn random_unit_vector() -> Vec3 {
         return Vec3::unit_vector(Vec3::random_in_unit_sphere());
     }
+
+    pub fn near_zero(&self) -> bool {
+        const s: f32 = (1 / 10_i32.pow(8)) as f32;
+        return ((self.e[0]).abs() < s) && ((self.e[1]).abs() < s) && ((self.e[2]).abs() < s);
+    }
+
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        return (*v) - 2.0 * v.dot(*n) * (*n);
+    }
 }
 
 impl ops::Add for Vec3 {

@@ -5,6 +5,9 @@ mod rtweekend;
 mod sphere;
 mod hittable_list;
 mod camera;
+mod lambertian;
+mod material;
+mod metal;
 
 use sphere::Sphere;
 use vec3::Vec3;
@@ -12,9 +15,10 @@ use vec3::Color;
 use vec3::Point3;
 use ray::Ray;
 use crate::hittable::{HitRecord, Hittable};
-use std::rc::Rc;
 use hittable_list::HittableList;
 use camera::Camera;
+use lambertian::Lambertian;
+use crate::metal::Metal;
 
 fn main() {
     // Image
@@ -27,9 +31,17 @@ fn main() {
     // World
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     let mut world = HittableList::new(world_objects);
+    let material_ground: Box<Lambertian> = Box::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
+    let material_center: Box<Lambertian> = Box::new(Lambertian {albedo: Color::new(0.7, 0.3, 0.3)});
+    let material_left: Box<Metal> = Box::new(Metal {albedo: Color::new(0.8, 0.8, 0.8)});
+    let material_right: Box<Metal> = Box::new(Metal {albedo: Color::new(0.8, 0.6, 0.2)});
 
-    world.add(Box::new(Sphere::new((Point3::new(0.0, 0.0, -1.0)), 0.5)));
-    world.add(Box::new(Sphere::new((Point3::new(0.0, -100.5, -1.0)), 100.0)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
+    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
+    world.add(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
+
+
 
 
     // Camera
@@ -66,8 +78,11 @@ fn ray_color(r: Ray, world: &HittableList, depth: i32) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
     if (*world).hit(&r, 0.001, rtweekend::infinity as f32, &mut rec) {
-        let target: Point3 = rec.p + rec.normal + Vec3::random_unit_vector();
-        return 0.5 * ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1);
+        let scattered: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
+        let mut attenuation: Color = Color::new(0.0, 0.0, 0.0);
+        if rec.mat_ptr.scatter(&r, &rec, Box::new(attenuation), Box::new(scattered)) {
+            return attenuation * ray_color(scattered, world, depth - 1);
+        }
     }
 
     let unit_direction: Vec3 = Vec3::unit_vector(r.direction() as Vec3);
