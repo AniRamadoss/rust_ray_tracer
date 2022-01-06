@@ -1,4 +1,3 @@
-use crate::hittable;
 use std::rc::Rc;
 use crate::vec3::Vec3;
 use crate::vec3::Color;

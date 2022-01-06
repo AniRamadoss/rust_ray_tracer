@@ -7,10 +7,13 @@ pub struct Camera {
     lower_left_corner: Point3,
     horizontal: Vec3,
     vertical: Vec3,
+    u: Vec3,
+    v: Vec3,
+    lens_radius: f32,
 }
 
 impl Camera {
-    pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfov: f32, aspect_ratio: f32) -> Camera {
+    pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32) -> Camera {
         const FOCAL_LENGTH: f32 = 1.0;
 
         // Vertical FOV in Deg
@@ -22,9 +25,9 @@ impl Camera {
         let u = Vec3::unit_vector(Vec3::cross(vup, w));
         let v = Vec3::cross(w, u);
 
-        let h = viewport_width * u;
-        let v = viewport_height * v;
-        let llc = lookfrom - h / 2.0 - v / 2.0 - w;
+        let h = focus_dist * viewport_width * u;
+        let v = focus_dist * viewport_height * v;
+        let llc = lookfrom - h / 2.0 - v / 2.0 - focus_dist * w;
 
         // let aspect_ratio: f32 = 16.0 / 9.0;
         // let viewport_height: f32 = 2.0;
@@ -36,10 +39,15 @@ impl Camera {
             lower_left_corner: llc,
             horizontal: h,
             vertical: v,
+            u,
+            v,
+            lens_radius: aperture / 2.0
         };
     }
 
     pub fn get_ray(&self, s: f32, t: f32) -> Ray {
-        return Ray::new(self.origin, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin);
+        let rd = self.lens_radius * Vec3::random_in_unit_disk();
+        let offset = rd.x() * self.u + rd.y() * self.v;
+        return Ray::new(self.origin, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset);
     }
 }
