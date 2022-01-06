@@ -1,9 +1,7 @@
-use std::cell::RefCell;
 use std::rc::Rc;
 use crate::ray::Ray;
-use crate::{Color, Vec3};
-use crate::vec3::Point3;
-use crate::hittable::{Hittable, HitRecord};
+use crate::Color;
+use crate::hittable::HitRecord;
 
 pub trait Material: Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;

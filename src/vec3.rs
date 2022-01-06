@@ -1,6 +1,6 @@
 use std::ops;
 use crate::rtweekend;
-use crate::rtweekend::{random_double, random_double_range};
+use crate::rtweekend::random_double_range;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -89,8 +89,8 @@ impl Vec3 {
     }
 
     pub fn near_zero(&self) -> bool {
-        const s: f32 = (1 / 10_i32.pow(8)) as f32;
-        return ((self.e[0]).abs() < s) && ((self.e[1]).abs() < s) && ((self.e[2]).abs() < s);
+        const S: f32 = (1 / 10_i32.pow(8)) as f32;
+        return ((self.e[0]).abs() < S) && ((self.e[1]).abs() < S) && ((self.e[2]).abs() < S);
     }
 
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {

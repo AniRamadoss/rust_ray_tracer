@@ -10,8 +10,6 @@ mod material;
 mod metal;
 mod dieletric;
 
-use std::cell::RefCell;
-use std::f32::consts::PI;
 use std::rc::Rc;
 use rand::Rng;
 use sphere::Sphere;
@@ -19,7 +17,7 @@ use vec3::Vec3;
 use vec3::Color;
 use vec3::Point3;
 use ray::Ray;
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::Hittable;
 use hittable_list::HittableList;
 use camera::Camera;
 use lambertian::Lambertian;
@@ -31,8 +29,8 @@ fn main() {
     const IMAGE_WIDTH: i32 = 1200;
     const ASPECT_RATIO: f32 = 3.0 / 2.0;
     const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as i32;
-    const samples_per_pixel: i32 = 500;
-    const max_depth: i32 = 50;
+    const SAMPLES_PER_PIXEL: i32 = 500;
+    const MAX_DEPTH: i32 = 50;
 
     // Zoom
     // let R = f32::cos(PI/4.0);
@@ -85,13 +83,13 @@ fn main() {
         }
         for i in 0..IMAGE_WIDTH {
             let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
-            for s in 0..samples_per_pixel {
+            for _s in 0..SAMPLES_PER_PIXEL {
                 let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
                 let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
                 let r = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(&r, &world, max_depth);
+                pixel_color = pixel_color + ray_color(&r, &world, MAX_DEPTH);
             }
-            write_color(pixel_color, samples_per_pixel);
+            write_color(pixel_color, SAMPLES_PER_PIXEL);
         }
 
     }

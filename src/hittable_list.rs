@@ -1,7 +1,3 @@
-use std::rc::Rc;
-use crate::vec3::Vec3;
-use crate::vec3::Color;
-use crate::vec3::Point3;
 use crate::Ray;
 use crate::hittable::{HitRecord, Hittable};
 
@@ -14,10 +10,6 @@ impl HittableList {
         return HittableList {
             objects: list,
         };
-    }
-
-    pub fn clear(&mut self) {
-        self.objects.clear();
     }
 
     pub fn add(&mut self, object: Box<dyn Hittable>) {

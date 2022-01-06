@@ -14,7 +14,6 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32) -> Camera {
-        const FOCAL_LENGTH: f32 = 1.0;
 
         // Vertical FOV in Deg
         let theta = degrees_to_radians(vfov as f64);

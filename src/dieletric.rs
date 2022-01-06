@@ -26,7 +26,6 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let attenuation = Color::new(1.0, 1.0, 1.0);
         let refraction_ratio: f32 = if rec.front_face {1.0 / self.index_of_refraction} else { self.index_of_refraction };
         let unit_direction = Vec3::unit_vector(r_in.direction());
 
