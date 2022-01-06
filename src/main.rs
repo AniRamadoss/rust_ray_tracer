@@ -8,6 +8,7 @@ mod camera;
 mod lambertian;
 mod material;
 mod metal;
+mod dieletric;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -20,6 +21,7 @@ use crate::hittable::{HitRecord, Hittable};
 use hittable_list::HittableList;
 use camera::Camera;
 use lambertian::Lambertian;
+use crate::dieletric::Dielectric;
 use crate::metal::Metal;
 
 fn main() {
@@ -34,8 +36,8 @@ fn main() {
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     let mut world = HittableList::new(world_objects);
     let material_ground: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
-    let material_center: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.7, 0.3, 0.3)});
-    let material_left: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_center: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
+    let material_left: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
     let material_right: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
