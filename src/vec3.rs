@@ -95,6 +95,12 @@ impl Vec3 {
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         return (*v) - 2.0 * v.dot(*n) * (*n);
     }
+
+    pub fn change(&mut self, other: Vec3) {
+        self.e[0] = other.x();
+        self.e[1] = other.y();
+        self.e[2] = other.z();
+    }
 }
 
 impl ops::Add for Vec3 {

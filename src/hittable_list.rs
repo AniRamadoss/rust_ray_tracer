@@ -27,21 +27,17 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
-        let mut hit_anything: bool = false;
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        let mut temp_rec = None;
         let mut closest_so_far = t_max;
 
-        for obj in &self.objects {
-            if obj.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                rec.t = closest_so_far;
-                rec.p = temp_rec.p;
-                rec.normal = temp_rec.normal;
+        for object in &self.objects {
+            if let Some(rec) = object.hit(r, t_min, closest_so_far) {
+                closest_so_far = rec.t;
+                temp_rec = Some(rec);
             }
         }
-        return hit_anything;
+        return temp_rec;
 
     }
 }

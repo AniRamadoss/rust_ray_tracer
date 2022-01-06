@@ -9,6 +9,8 @@ mod lambertian;
 mod material;
 mod metal;
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use sphere::Sphere;
 use vec3::Vec3;
 use vec3::Color;
@@ -31,10 +33,10 @@ fn main() {
     // World
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     let mut world = HittableList::new(world_objects);
-    let material_ground: Box<Lambertian> = Box::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
-    let material_center: Box<Lambertian> = Box::new(Lambertian {albedo: Color::new(0.7, 0.3, 0.3)});
-    let material_left: Box<Metal> = Box::new(Metal {albedo: Color::new(0.8, 0.8, 0.8)});
-    let material_right: Box<Metal> = Box::new(Metal {albedo: Color::new(0.8, 0.6, 0.2)});
+    let material_ground: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
+    let material_center: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.7, 0.3, 0.3)});
+    let material_left: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_right: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
     world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
@@ -59,7 +61,7 @@ fn main() {
                 let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
                 let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
                 let r = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(r, &world, max_depth);
+                pixel_color = pixel_color + ray_color(&r, &world, max_depth);
             }
             write_color(pixel_color, samples_per_pixel);
         }
@@ -72,22 +74,23 @@ fn main() {
     // test_vec3();
 }
 
-fn ray_color(r: Ray, world: &HittableList, depth: i32) -> Color {
-    let mut rec = HitRecord::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), 0.0, false);
+fn ray_color(r: &Ray, world: &HittableList, depth: i32) -> Color {
     if depth <= 0 {
+        // If we've exceeded the ray bounce limit, no more light is gathered
         return Color::new(0.0, 0.0, 0.0);
     }
-    if (*world).hit(&r, 0.001, rtweekend::infinity as f32, &mut rec) {
-        let scattered: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0));
-        let mut attenuation: Color = Color::new(0.0, 0.0, 0.0);
-        if rec.mat_ptr.scatter(&r, &rec, Box::new(attenuation), Box::new(scattered)) {
-            return attenuation * ray_color(scattered, world, depth - 1);
-        }
-    }
 
-    let unit_direction: Vec3 = Vec3::unit_vector(r.direction() as Vec3);
-    let t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+    if let Some(rec) = world.hit(r, 0.001, f64::INFINITY as f32) {
+        if let Some((attenuation, scattered)) = rec.mat_ptr.scatter(r, &rec) {
+            attenuation * ray_color(&scattered, world, depth - 1)
+        } else {
+            Color::new(0.0, 0.0, 0.0)
+        }
+    } else {
+        let unit_direction = Vec3::unit_vector(r.direction());
+        let t = 0.5 * (unit_direction.y() + 1.0);
+        (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+    }
 }
 
 pub fn hit_sphere(center: &Point3, radius: f32, r: &Ray) -> f32 {
@@ -113,33 +116,33 @@ pub fn write_color(v: Color, samples_per_pixel: i32) {
     println!("{} {} {}", (256.0 * rtweekend::clamp(r, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(g, 0.0, 0.999)) as i32, (256.0 * rtweekend::clamp(b, 0.0, 0.999)) as i32);
 }
 
-fn test_vec3() {
-    // Testing vec3.rs
-    let vec1 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
-    let vec2 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
-    let result = vec1 + vec2;
-    assert_eq!(result.x(), 2.0);
-    assert_eq!(result.y(), 4.0);
-    assert_eq!(result.z(), 6.0);
-    assert_eq!(vec1.x() + vec2.x(),result.x());
-    assert_eq!(vec1.length(), (14 as f32).sqrt());
-    let vec3: Vec3 = Vec3::new(7f32, 14f32, 21f32);
-    assert_same_vector(&vec3, &(7.0 * vec1));
-    assert_same_vector(&(vec3 / 7.0), &vec1);
-
-    let vec1 : Vec3 = Vec3::new(3f32, 7f32, 31f32);
-    let vec2 : Vec3 = Vec3::new(36f32, 64f32, 8f32);
-    let cross_vec : Vec3 = Vec3::new(-1928f32, 1092f32, -60f32);
-    assert_same_vector(&cross_vec, &Vec3::cross(vec1, vec2));
-
-    assert_eq!(804 as f32, Vec3::dot(vec1, vec2));
-}
-
-fn assert_same_vector(v1: &Vec3, v2: &Vec3) {
-    assert_eq!(v1.x(), v2.x());
-    assert_eq!(v1.y(), v2.y());
-    assert_eq!(v1.z(), v2.z());
-}
+// fn test_vec3() {
+//     // Testing vec3.rs
+//     let vec1 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
+//     let vec2 : Vec3 = Vec3::new(1f32, 2f32, 3f32);
+//     let result = vec1 + vec2;
+//     assert_eq!(result.x(), 2.0);
+//     assert_eq!(result.y(), 4.0);
+//     assert_eq!(result.z(), 6.0);
+//     assert_eq!(vec1.x() + vec2.x(),result.x());
+//     assert_eq!(vec1.length(), (14 as f32).sqrt());
+//     let vec3: Vec3 = Vec3::new(7f32, 14f32, 21f32);
+//     assert_same_vector(&vec3, &(7.0 * vec1));
+//     assert_same_vector(&(vec3 / 7.0), &vec1);
+//
+//     let vec1 : Vec3 = Vec3::new(3f32, 7f32, 31f32);
+//     let vec2 : Vec3 = Vec3::new(36f32, 64f32, 8f32);
+//     let cross_vec : Vec3 = Vec3::new(-1928f32, 1092f32, -60f32);
+//     assert_same_vector(&cross_vec, &Vec3::cross(vec1, vec2));
+//
+//     assert_eq!(804 as f32, Vec3::dot(vec1, vec2));
+// }
+//
+// fn assert_same_vector(v1: &Vec3, v2: &Vec3) {
+//     assert_eq!(v1.x(), v2.x());
+//     assert_eq!(v1.y(), v2.y());
+//     assert_eq!(v1.z(), v2.z());
+// }
 
 // fn image_output(IMAGE_WIDTH: i32, IMAGE_HEIGHT: i32) {
 //     // Render

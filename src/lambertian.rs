@@ -1,3 +1,6 @@
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::{Color, Vec3};
@@ -9,15 +12,15 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(a: &Color) -> Lambertian {
+    pub fn new(a: Color) -> Lambertian {
         return Lambertian {
-            albedo: *a,
+            albedo: a,
         }
     }
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, mut attenuation: Box<Color>, mut scattered: Box<Ray>) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
 
         // Catch degenerate scatter direction
@@ -25,14 +28,12 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
 
-        scattered = Box::new((Ray::new(rec.p, scatter_direction)));
-        let mut col = Box::new(self.albedo.clone());
-        attenuation = col;
-        return true;
+        let mut scattered = Ray::new(rec.p, scatter_direction);
+        return Some((self.albedo, scattered));
     }
 
-    fn clone(&self) -> Box<dyn Material> {
-        return Box::new(Lambertian {
+    fn clone(&self) -> Rc<dyn Material> {
+        return Rc::new(Lambertian {
             albedo: self.albedo,
         });
     }

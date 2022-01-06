@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::ray::Ray;
 use crate::{Metal, Vec3};
 use crate::vec3::Point3;
@@ -8,14 +9,14 @@ use crate::vec3::Color;
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    pub mat_ptr: Box<dyn Material>,
+    pub mat_ptr: Rc<dyn Material>,
     pub t: f32,
     pub front_face: bool,
 }
 
 impl HitRecord {
     pub fn new(p: Point3, normal: Vec3, t: f32, front_face: bool) -> HitRecord {
-        let color = Box::new(Metal::new(&Color::new(0.0, 0.0, 0.0)));
+        let color = Rc::new(Metal::new(Color::new(0.0, 0.0, 0.0), 0.0));
         return HitRecord {
             p,
             normal,
@@ -31,6 +32,6 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable: Sync + Send {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+pub trait Hittable {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
