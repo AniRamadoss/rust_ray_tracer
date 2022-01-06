@@ -1,4 +1,6 @@
 use crate::{Point3, Ray, Vec3};
+use crate::rtweekend::degrees_to_radians;
+
 #[derive(Copy, Clone)]
 pub struct Camera {
     origin: Point3,
@@ -8,7 +10,14 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new() -> Camera {
+    pub fn new(vfov: f32, aspect_ratio: f32) -> Camera {
+        const FOCAL_LENGTH: f32 = 1.0;
+
+        // Vertical FOV in Deg
+        let theta = degrees_to_radians(vfov as f64);
+        let viewport_height = 2.0 * ((theta as f32) / 2.0).tan();
+        let viewport_width = aspect_ratio * viewport_height;
+
         let aspect_ratio: f32 = 16.0 / 9.0;
         let viewport_height: f32 = 2.0;
         let viewport_width: f32 = aspect_ratio * viewport_height;

@@ -11,6 +11,7 @@ mod metal;
 mod dieletric;
 
 use std::cell::RefCell;
+use std::f32::consts::PI;
 use std::rc::Rc;
 use sphere::Sphere;
 use vec3::Vec3;
@@ -33,23 +34,38 @@ fn main() {
     const max_depth: i32 = 50;
 
     // World
+    let R = f32::cos(PI/4.0);
     let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     let mut world = HittableList::new(world_objects);
-    let material_ground: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
-    let material_center: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    let material_left: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    let material_right: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
-    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
-    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
-    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
-    world.add(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
+    let mat_left = Rc::new(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
+    let mat_right = Rc::new(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
 
+    let sphere_left = Sphere::new(Point3::new(-R, 0.0, -1.0), R, mat_left);
+    let sphere_right = Sphere::new(Point3::new(R, 0.0, -1.0), R, mat_right);
+    world.add(Box::new(sphere_left));
+    world.add(Box::new(sphere_right));
+
+
+    //
+    // let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
+    // let mut world = HittableList::new(world_objects);
+    // let material_ground: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
+    // let material_center: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    // let material_left: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
+    // let mat_left_inner = Rc::new(Dielectric::new(1.5));
+    // let material_right: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
+    //
+    // world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
+    // world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
+    // world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
+    // world.add(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
+    // world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.4, mat_left_inner)));
 
 
 
     // Camera
-    let cam: Camera = Camera::new();
+    let cam: Camera = Camera::new(90.0, ASPECT_RATIO);
 
     // Render
     print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
