@@ -1,4 +1,4 @@
-use crate::{Point3, Ray, Vec3};
+use crate::{Point3, Ray, rtweekend, Vec3};
 use crate::rtweekend::degrees_to_radians;
 
 #[derive(Copy, Clone)]
@@ -16,17 +16,17 @@ impl Camera {
     pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32) -> Camera {
 
         // Vertical FOV in Deg
-        let theta = degrees_to_radians(vfov as f64);
+        let theta = (rtweekend::PI as f32) / 180.0 * vfov;
         let viewport_height = 2.0 * ((theta as f32) / 2.0).tan();
         let viewport_width = aspect_ratio * viewport_height;
 
-        let w = Vec3::unit_vector(lookfrom - lookat);
-        let u = Vec3::unit_vector(Vec3::cross(vup, w));
-        let v = Vec3::cross(w, u);
+        let _w = Vec3::unit_vector(lookfrom - lookat);
+        let _u = Vec3::unit_vector(Vec3::cross(vup, _w));
+        let _v = Vec3::cross(_w, _u);
 
-        let h = focus_dist * viewport_width * u;
-        let v = focus_dist * viewport_height * v;
-        let llc = lookfrom - h / 2.0 - v / 2.0 - focus_dist * w;
+        let h = focus_dist * viewport_width * _u;
+        let v = focus_dist * viewport_height * _v;
+        let llc = lookfrom - h / 2.0 - v / 2.0 - focus_dist * _w;
 
         // let aspect_ratio: f32 = 16.0 / 9.0;
         // let viewport_height: f32 = 2.0;
@@ -38,8 +38,8 @@ impl Camera {
             lower_left_corner: llc,
             horizontal: h,
             vertical: v,
-            u,
-            v,
+            u: _u,
+            v: _v,
             lens_radius: aperture / 2.0
         };
     }
@@ -47,6 +47,6 @@ impl Camera {
     pub fn get_ray(&self, s: f32, t: f32) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = rd.x() * self.u + rd.y() * self.v;
-        return Ray::new(self.origin, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset);
+        return Ray::new(self.origin + offset, self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset);
     }
 }

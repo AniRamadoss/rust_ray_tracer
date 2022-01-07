@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use rand::Rng;
 use crate::hittable::HitRecord;
 use crate::material::Material;
@@ -47,7 +47,7 @@ impl Material for Dielectric {
         return Some((Color::new(1.0, 1.0, 1.0), scattered));
     }
 
-    fn clone(&self) -> Rc<dyn Material> {
-        return Rc::new(Dielectric::new(self.index_of_refraction.clone()));
+    fn clone(&self) -> Arc<dyn Material> {
+        return Arc::new(Dielectric::new(self.index_of_refraction.clone()));
     }
 }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::{Color, Vec3};
@@ -29,8 +29,8 @@ impl Material for Lambertian {
         return Some((self.albedo, scattered));
     }
 
-    fn clone(&self) -> Rc<dyn Material> {
-        return Rc::new(Lambertian {
+    fn clone(&self) -> Arc<dyn Material> {
+        return Arc::new(Lambertian {
             albedo: self.albedo,
         });
     }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::{Color, Vec3};
@@ -35,8 +35,8 @@ impl Material for Metal {
         }
     }
 
-    fn clone(&self) -> Rc<dyn Material> {
-        return Rc::new(Metal {
+    fn clone(&self) -> Arc<dyn Material> {
+        return Arc::new(Metal {
             albedo: self.albedo,
             fuzz: self.fuzz,
         });

@@ -1,3 +1,5 @@
+use rayon::prelude::*;
+use std;
 mod vec3;
 mod ray;
 mod hittable;
@@ -10,7 +12,7 @@ mod material;
 mod metal;
 mod dieletric;
 
-use std::rc::Rc;
+use std::sync::Arc;
 use rand::Rng;
 use sphere::Sphere;
 use vec3::Vec3;
@@ -23,6 +25,7 @@ use camera::Camera;
 use lambertian::Lambertian;
 use crate::dieletric::Dielectric;
 use crate::metal::Metal;
+
 
 fn main() {
     // Image
@@ -37,8 +40,8 @@ fn main() {
     // let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     // let mut world = HittableList::new(world_objects);
     //
-    // let mat_left = Rc::new(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
-    // let mat_right = Rc::new(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
+    // let mat_left = Arc::new(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
+    // let mat_right = Arc::new(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
     //
     // let sphere_left = Sphere::new(Point3::new(-R, 0.0, -1.0), R, mat_left);
     // let sphere_right = Sphere::new(Point3::new(R, 0.0, -1.0), R, mat_right);
@@ -50,11 +53,11 @@ fn main() {
 
     // let world_objects: Vec<Box<dyn Hittable>> = Vec::new();
     // let mut world = HittableList::new(world_objects);
-    // let material_ground: Rc<Lambertian> = Rc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
-    // let material_center: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    // let material_left: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    // let mat_left_inner = Rc::new(Dielectric::new(1.5));
-    // let material_right: Rc<Metal> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
+    // let material_ground: Arc<Lambertian> = Arc::new(Lambertian {albedo: Color::new(0.8, 0.8, 0.0)});
+    // let material_center: Arc<Lambertian> = Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    // let material_left: Arc<Dielectric> = Arc::new(Dielectric::new(1.5));
+    // let mat_left_inner = Arc::new(Dielectric::new(1.5));
+    // let material_right: Arc<Metal> = Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
     //
     // world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
     // world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material_center)));
@@ -78,20 +81,28 @@ fn main() {
     // Render
     print!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT);
     for j in (0..IMAGE_HEIGHT).rev() {
-        if j % 10 == 0 {
-            eprintln!("\nScanlines remaining: {} ", j);
-        }
-        for i in 0..IMAGE_WIDTH {
-            let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
-            for _s in 0..SAMPLES_PER_PIXEL {
-                let u = (i as f32 + rtweekend::random_double()) / (IMAGE_WIDTH - 1) as f32;
-                let v = (j as f32 + rtweekend::random_double()) / (IMAGE_HEIGHT - 1) as f32;
-                let r = cam.get_ray(u, v);
+        eprintln!("Scanlines remaining: {}", j + 1);
+
+        let scanline: Vec<Color> = (0..IMAGE_WIDTH).into_par_iter().map(|i| {
+            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+            for _ in 0..SAMPLES_PER_PIXEL {
+                let mut rng = rand::thread_rng();
+                let random_u: f64 = rng.gen();
+                let random_v: f64 = rng.gen();
+
+                let u = ((i as f64) + random_u) / ((IMAGE_WIDTH - 1) as f64);
+                let v = ((j as f64) + random_v) / ((IMAGE_HEIGHT - 1) as f64);
+
+                let r = cam.get_ray(u as f32, v as f32);
                 pixel_color = pixel_color + ray_color(&r, &world, MAX_DEPTH);
             }
+
+            pixel_color
+        }).collect();
+
+        for pixel_color in scanline {
             write_color(pixel_color, SAMPLES_PER_PIXEL);
         }
-
     }
     eprintln!("\nCompleted!\n");
 
@@ -105,7 +116,7 @@ fn random_scene() -> HittableList {
     let world_list: Vec<Box<dyn Hittable>> = Vec::new();
     let mut world = HittableList::new(world_list);
 
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let material_ground = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
     let sphere_ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, material_ground);
     world.add(Box::new(sphere_ground));
 
@@ -116,7 +127,7 @@ fn random_scene() -> HittableList {
             if choose_material < 0.8 {
                 // Diffuse
                 let albedo = Color::random_range(0.0, 1.0) * Color::random_range(0.0, 1.0);
-                let sphere_material = Rc::new(Lambertian::new(albedo));
+                let sphere_material = Arc::new(Lambertian::new(albedo));
                 let sphere = Sphere::new(center, 0.2, sphere_material);
 
                 world.add(Box::new(sphere));
@@ -126,23 +137,23 @@ fn random_scene() -> HittableList {
                 // Metal
                 let albedo = Color::random_range(0.4, 1.0);
                 let fuzz = rng.gen_range(0.0..0.5);
-                let sphere_material = Rc::new(Metal::new(albedo, fuzz));
+                let sphere_material = Arc::new(Metal::new(albedo, fuzz));
                 let sphere = Sphere::new(center, 0.2, sphere_material);
                 world.add(Box::new(sphere));
             }
 
             else {
                 // Glass
-                let sphere_material = Rc::new(Dielectric::new(1.5));
+                let sphere_material = Arc::new(Dielectric::new(1.5));
                 let sphere = Sphere::new(center, 0.2, sphere_material);
                 world.add(Box::new(sphere));
             }
         }
     }
 
-    let mat1 = Rc::new(Dielectric::new(1.5));
-    let mat2 = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    let mat3 = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    let mat1 = Arc::new(Dielectric::new(1.5));
+    let mat2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let mat3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
     let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);
     let sphere2 = Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2);
