@@ -6,3 +6,5 @@ This project seeks to understand the concepts behind ray tracing and other graph
 ## Sample Outputs
 ### Some renders
 [Render of Lots of Random Balls](https://gyazo.com/d332d1458e6d0dbf4a989cdb5f485def)
+
+The outputs in the output folder can be opened using GIMP [(GNU Image Manipulation Program)](https://www.gimp.org/downloads/).
