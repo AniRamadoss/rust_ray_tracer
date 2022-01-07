@@ -5,4 +5,4 @@ This project seeks to understand the concepts behind ray tracing and other graph
 
 ## Sample Outputs
 ### Some renders
-[Render of Ray Tracing In One Weekend Book Cover](https://github.com/AniRamadoss/rust_ray_tracer/blob/master/outputs/12_book_cover_render)
+[Render of Ray Tracing In One Weekend Book Cover](https://gyazo.com/d332d1458e6d0dbf4a989cdb5f485def)
