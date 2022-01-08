@@ -6,5 +6,6 @@ This project seeks to understand the concepts behind ray tracing and other graph
 ## Sample Outputs
 ### Some renders
 ![Render of Lots of Random Balls](https://github.com/AniRamadoss/rust_ray_tracer/blob/master/outputs/random%20balls.jpg)
-
+![Top View](https://github.com/AniRamadoss/rust_ray_tracer/blob/master/outputs/random%20balls%20top%20view.jpg)
+![Bottom View](https://github.com/AniRamadoss/rust_ray_tracer/blob/master/outputs/random%20balls%20bottom%20view.jpg)
 The outputs in the output folder can be opened using GIMP [(GNU Image Manipulation Program)](https://www.gimp.org/downloads/).
